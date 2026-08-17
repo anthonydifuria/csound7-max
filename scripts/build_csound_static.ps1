@@ -1,0 +1,236 @@
+#Requires -Version 5.1
+#
+# Static build of Csound 7 + libsndfile + libsamplerate for Windows (x64),
+# MSVC toolchain. The Windows counterpart to build_csound_static.sh
+# (macOS/Linux, bash) - not a shared script on purpose, since MSVC's
+# toolchain (cl.exe/link.exe, .lib instead of .a, the Visual Studio CMake
+# generator, no lipo, no Homebrew/apt) is different enough that force-
+# fitting it into the bash script wasn't realistic (see that script's own
+# top comment for the same reasoning stated the other way around). Same
+# script as ../../PD/scripts/build_csound_static.ps1, kept as a separate
+# copy on purpose - same reasoning as the bash script's own duplication
+# between MAX/ and PD/, keeps each side self-contained.
+#
+# UNVERIFIED - written without access to a Windows machine, meant to be
+# run for real for the first time by GitHub Actions' windows-latest
+# runner (or by you, if you have a Windows box - see the project README).
+# Expect at least one round of real fixes after that first run, the same
+# way the macOS and Linux branches of build_csound_static.sh both needed
+# real build logs before they worked - that's the normal next step here,
+# not a sign this was written carelessly. Two things flagged below as the
+# most likely spots to need a fix are marked UNVERIFIED inline.
+#
+# x64 only - matches every other Windows target in this project.
+
+$ErrorActionPreference = "Stop"
+
+$CsoundRepo = "https://github.com/csound/csound.git"
+$CsoundBranch = "develop"
+$SndfileRepo = "https://github.com/libsndfile/libsndfile.git"
+$SamplerateRepo = "https://github.com/libsndfile/libsamplerate.git"
+
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$ProjectRoot = Split-Path -Parent $ScriptDir
+$BuildRoot = Join-Path $ProjectRoot "build"
+$InstallRoot = Join-Path $BuildRoot "csound-install"
+$WinInstall = Join-Path $InstallRoot "windows-x64"
+
+# ---------------------------------------------------------------------
+# 0. toolchain check: bison/flex via winflexbison (the standard Windows
+#    port of GNU bison/flex - `choco install winflexbison3`, already done
+#    by the GitHub Actions workflow before this script runs). Its
+#    executables are named win_bison.exe/win_flex.exe, not bison.exe/
+#    flex.exe - passed straight to CMake's -DBISON_EXECUTABLE/
+#    -DFLEX_EXECUTABLE (same mechanism the macOS/Linux script uses), no
+#    renaming needed. cmake and the MSVC toolchain itself (via the Visual
+#    Studio generator, which locates cl.exe/link.exe on its own - no
+#    vcvarsall/Developer Command Prompt setup needed first) are assumed
+#    already present, same as GitHub's windows-latest runner image ships.
+# ---------------------------------------------------------------------
+function Find-Tool {
+    param([string[]]$Names, [string]$InstallHint)
+    foreach ($n in $Names) {
+        $cmd = Get-Command $n -ErrorAction SilentlyContinue
+        if ($cmd) { return $cmd.Source }
+    }
+    Write-Error "$($Names -join ' or ') not found on PATH. $InstallHint"
+    exit 1
+}
+
+$BisonExe = Find-Tool -Names @("win_bison.exe", "win_bison", "bison.exe", "bison") `
+    -InstallHint "Install with: choco install winflexbison3"
+$FlexExe = Find-Tool -Names @("win_flex.exe", "win_flex", "flex.exe", "flex") `
+    -InstallHint "Install with: choco install winflexbison3"
+
+Write-Host "==> using bison: $BisonExe"
+Write-Host "==> using flex:   $FlexExe"
+
+function Clone-Once {
+    param([string]$Repo, [string]$Branch, [string]$Dest)
+    if (-not (Test-Path (Join-Path $Dest ".git"))) {
+        Write-Host "==> cloning $Repo ($Branch)"
+        git clone --branch $Branch --depth 1 $Repo $Dest
+    }
+}
+
+# ---------------------------------------------------------------------
+# 1. libsndfile, static - same flags/reasoning as the macOS/Linux script,
+#    this part is genuinely OS-agnostic CMake. Visual Studio's own
+#    generator is multi-config (Release/Debug chosen at build time, not
+#    configure time), unlike the single-config Unix Makefiles generator
+#    the other two branches use - hence --config Release on the build/
+#    install steps below instead of a -DCMAKE_BUILD_TYPE= configure flag.
+# ---------------------------------------------------------------------
+$SndfileSrc = Join-Path $BuildRoot "sndfile-static\src"
+Clone-Once -Repo $SndfileRepo -Branch "master" -Dest $SndfileSrc
+$SndfileBuild = Join-Path $BuildRoot "sndfile-static\build-windows"
+$SndfileInstall = Join-Path $InstallRoot "windows-x64-deps\sndfile"
+
+Write-Host "==> building static libsndfile for Windows (x64)"
+cmake -S $SndfileSrc -B $SndfileBuild -G "Visual Studio 17 2022" -A x64 `
+    -DCMAKE_INSTALL_PREFIX="$SndfileInstall" `
+    -DBUILD_SHARED_LIBS=OFF `
+    -DBUILD_PROGRAMS=OFF `
+    -DBUILD_EXAMPLES=OFF `
+    -DBUILD_TESTING=OFF `
+    -DENABLE_EXTERNAL_LIBS=OFF `
+    -DENABLE_MPEG=OFF `
+    -DENABLE_CPACK=OFF
+if ($LASTEXITCODE -ne 0) { throw "libsndfile configure failed" }
+cmake --build $SndfileBuild --config Release
+if ($LASTEXITCODE -ne 0) { throw "libsndfile build failed" }
+cmake --install $SndfileBuild --config Release
+if ($LASTEXITCODE -ne 0) { throw "libsndfile install failed" }
+
+# ---------------------------------------------------------------------
+# 2. libsamplerate, static
+# ---------------------------------------------------------------------
+$SamplerateSrc = Join-Path $BuildRoot "samplerate-static\src"
+Clone-Once -Repo $SamplerateRepo -Branch "master" -Dest $SamplerateSrc
+$SamplerateBuild = Join-Path $BuildRoot "samplerate-static\build-windows"
+$SamplerateInstall = Join-Path $InstallRoot "windows-x64-deps\samplerate"
+
+Write-Host "==> building static libsamplerate for Windows (x64)"
+cmake -S $SamplerateSrc -B $SamplerateBuild -G "Visual Studio 17 2022" -A x64 `
+    -DCMAKE_INSTALL_PREFIX="$SamplerateInstall" `
+    -DBUILD_SHARED_LIBS=OFF `
+    -DBUILD_TESTING=OFF `
+    -DLIBSAMPLERATE_EXAMPLES=OFF `
+    -DLIBSAMPLERATE_INSTALL=ON
+if ($LASTEXITCODE -ne 0) { throw "libsamplerate configure failed" }
+cmake --build $SamplerateBuild --config Release
+if ($LASTEXITCODE -ne 0) { throw "libsamplerate build failed" }
+cmake --install $SamplerateBuild --config Release
+if ($LASTEXITCODE -ne 0) { throw "libsamplerate install failed" }
+
+# find_library-style lookup rather than a single hardcoded name - CMake's
+# default static-lib naming on MSVC does NOT add a "lib" prefix the way it
+# does on Unix, but it wasn't confirmed whether libsndfile's/libsamplerate's
+# own CMakeLists.txt force one anyway (Csound's own does, unconditionally -
+# see source/csound7_tilde/CMakeLists.txt's comment on this). UNVERIFIED:
+# whichever of these two names is wrong will show up as a "not found"
+# error below, with both candidates and their real directory listing
+# printed, rather than a cryptic linker failure later.
+function Find-StaticLib {
+    param([string]$Dir, [string]$BaseName)
+    foreach ($candidate in @("lib$BaseName.lib", "$BaseName.lib")) {
+        $full = Join-Path $Dir $candidate
+        if (Test-Path $full) { return $full }
+    }
+    Write-Error "expected static $BaseName at $Dir\lib$BaseName.lib or $Dir\$BaseName.lib, neither found."
+    Write-Host "Contents of ${Dir}:"
+    Get-ChildItem $Dir -ErrorAction SilentlyContinue
+    exit 1
+}
+
+$SndfileLibDir = Join-Path $SndfileInstall "lib"
+$SamplerateLibDir = Join-Path $SamplerateInstall "lib"
+$SndfileLib = Find-StaticLib -Dir $SndfileLibDir -BaseName "sndfile"
+$SamplerateLib = Find-StaticLib -Dir $SamplerateLibDir -BaseName "samplerate"
+
+# ---------------------------------------------------------------------
+# 3. Csound 7, static, pointed at our own static sndfile/samplerate.
+#    UNVERIFIED (the two spots most likely to need a real fix after the
+#    first CI run, flagged here rather than guessed silently):
+#      - whether Csound's codebase compiles clean under MSVC at all
+#        without patches (it's a large, long-lived C/C++ codebase with
+#        real Linux/macOS-first history; the CMakeLists.txt does have
+#        WIN32-specific branches throughout, suggesting Windows support is
+#        real and maintained, but that's not the same as "compiles clean
+#        with zero fixes on the first try").
+#      - whether winflexbison's bison/flex are close enough behaviorally
+#        to GNU bison/flex for Csound's grammar files - they're built
+#        from the same upstream GNU sources, ported rather than
+#        reimplemented, so this is a reasonable bet, not a blind guess,
+#        but still unconfirmed here.
+#    USE_ALSA=OFF (present in the Linux branch of the bash script) is
+#    intentionally NOT passed here - Csound's own InOut/CMakeLists.txt
+#    only triggers that REQUIRED ALSA search `if(USE_ALSA AND LINUX)`,
+#    which is never true on Windows regardless of this flag.
+# ---------------------------------------------------------------------
+$CsoundSrc = Join-Path $BuildRoot "csound-static\src"
+Clone-Once -Repo $CsoundRepo -Branch $CsoundBranch -Dest $CsoundSrc
+$CsoundBuild = Join-Path $BuildRoot "csound-static\build-windows"
+
+Write-Host "==> building static Csound for Windows (x64)"
+Write-Host "    using SndFile:    $SndfileLib"
+Write-Host "    using SampleRate: $SamplerateLib"
+
+cmake -S $CsoundSrc -B $CsoundBuild -G "Visual Studio 17 2022" -A x64 `
+    -DCMAKE_INSTALL_PREFIX="$WinInstall" `
+    -DBISON_EXECUTABLE="$BisonExe" `
+    -DFLEX_EXECUTABLE="$FlexExe" `
+    -DSndFile_LIBRARY="$SndfileLib" `
+    -DSndFile_INCLUDE_DIR="$SndfileInstall\include" `
+    -DSampleRate_LIBRARY="$SamplerateLib" `
+    -DSampleRate_INCLUDE_DIR="$SamplerateInstall\include" `
+    -DBUILD_STATIC_LIBRARY=ON `
+    -DBUILD_PLUGINS=OFF `
+    -DUSE_LIBSNDFILE=ON `
+    -DUSE_LIBSAMPLERATE=ON `
+    -DUSE_CURL=OFF `
+    -DUSE_GETTEXT=OFF `
+    -DBUILD_UTILITIES=OFF `
+    -DBUILD_TESTS=OFF `
+    -DBUILD_INSTALLER=OFF `
+    -DBUILD_DOCS=OFF `
+    -DUSE_DOUBLE=ON `
+    -DFAIL_MISSING=OFF `
+    -DUSE_PORTAUDIO=OFF `
+    -DUSE_PORTMIDI=OFF `
+    -DUSE_JACK=OFF `
+    -DUSE_COREMIDI=OFF `
+    -DUSE_AUDIOUNIT=OFF `
+    -DUSE_IPMIDI=OFF `
+    -DUSE_PULSEAUDIO=OFF `
+    -DUSE_PIPEWIRE=OFF `
+    -DBUILD_OSC_OPCODES=OFF `
+    -DBUILD_CSBEATS=OFF `
+    -DBUILD_DSSI_OPCODES=OFF `
+    -DINSTALL_PYTHON_INTERFACE=OFF
+if ($LASTEXITCODE -ne 0) { throw "Csound configure failed" }
+cmake --build $CsoundBuild --config Release
+if ($LASTEXITCODE -ne 0) { throw "Csound build failed" }
+cmake --install $CsoundBuild --config Release
+if ($LASTEXITCODE -ne 0) { throw "Csound install failed" }
+
+# Bring the static sndfile/samplerate libs+headers into the same install
+# root as Csound's own, same idea as the Linux branch of the bash script -
+# one self-contained CSOUND_STATIC_ROOT directory.
+New-Item -ItemType Directory -Force -Path "$WinInstall\lib" | Out-Null
+New-Item -ItemType Directory -Force -Path "$WinInstall\include" | Out-Null
+Copy-Item $SndfileLib "$WinInstall\lib\"
+Copy-Item $SamplerateLib "$WinInstall\lib\"
+Copy-Item "$SndfileInstall\include\*" "$WinInstall\include\" -Recurse -Force
+Copy-Item "$SamplerateInstall\include\*" "$WinInstall\include\" -Recurse -Force
+
+Write-Host ""
+Write-Host "Done. Static libraries in: $WinInstall\lib"
+Write-Host "Headers in: $WinInstall\include"
+Write-Host ""
+Write-Host "Real lib file names:"
+Get-ChildItem "$WinInstall\lib"
+Write-Host ""
+Write-Host "If source/csound7_tilde/CMakeLists.txt's find_library() calls didn't"
+Write-Host "find the right files, the names above are the real ones to fix"
+Write-Host "them to point at."

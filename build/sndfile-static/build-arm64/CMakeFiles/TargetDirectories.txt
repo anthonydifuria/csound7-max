@@ -1,0 +1,7 @@
+/Users/ant/Desktop/csound7_tilde/build/sndfile-static/build-arm64/CMakeFiles/sndfile.dir
+/Users/ant/Desktop/csound7_tilde/build/sndfile-static/build-arm64/CMakeFiles/edit_cache.dir
+/Users/ant/Desktop/csound7_tilde/build/sndfile-static/build-arm64/CMakeFiles/rebuild_cache.dir
+/Users/ant/Desktop/csound7_tilde/build/sndfile-static/build-arm64/CMakeFiles/list_install_components.dir
+/Users/ant/Desktop/csound7_tilde/build/sndfile-static/build-arm64/CMakeFiles/install.dir
+/Users/ant/Desktop/csound7_tilde/build/sndfile-static/build-arm64/CMakeFiles/install/local.dir
+/Users/ant/Desktop/csound7_tilde/build/sndfile-static/build-arm64/CMakeFiles/install/strip.dir

@@ -1,0 +1,13 @@
+prefix=/Users/ant/Desktop/csound7_tilde/build/csound-install/arm64-deps/sndfile
+exec_prefix=${prefix}
+libdir=/Users/ant/Desktop/csound7_tilde/build/csound-install/arm64-deps/sndfile/lib
+includedir=/Users/ant/Desktop/csound7_tilde/build/csound-install/arm64-deps/sndfile/include
+
+Name: sndfile
+Description: A library for reading and writing audio files
+Requires:
+Requires.private:  
+Version: 1.2.2
+Libs: -L${libdir} -lsndfile
+Libs.private: 
+Cflags: -I${includedir}
