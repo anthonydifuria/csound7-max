@@ -1,9 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/Users/ant/Desktop/csound7_tilde/build/external/cmake_install.cmake",
-		"/Users/ant/Desktop/csound7_tilde/build/external/_deps/max-sdk-base-build/cmake_install.cmake",
-		"/Users/ant/Desktop/csound7_tilde/build/external/source/csound7_tilde/cmake_install.cmake"
-	],
-	"Parallel" : false
-}
