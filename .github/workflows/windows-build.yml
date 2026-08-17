@@ -38,8 +38,17 @@ jobs:
         shell: pwsh
         run: ./scripts/build_csound_static.ps1
 
+      # -DCMAKE_MSVC_RUNTIME_LIBRARY forces static CRT (/MT), matching what
+      # max-sdk-base's own max-pretarget.cmake would set automatically for
+      # the Visual Studio generator - it only does that
+      # `if (CMAKE_GENERATOR MATCHES "Visual Studio")`, which is false for
+      # Ninja, so we set it ourselves here too (found via a real CI
+      # failure: without it, this object's default dynamic CRT (/MD)
+      # conflicts with the prebuilt MaxAPI.lib/MaxAudio.lib, which expect
+      # /MT, causing dozens of unresolved CRT symbols at link time - see
+      # scripts/build_csound_static.ps1's copy of this same comment).
       - name: Configure
-        run: cmake -S . -B build/external -G Ninja -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build/external -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>"
 
       - name: Build
         run: cmake --build build/external

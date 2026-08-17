@@ -95,9 +95,24 @@ Clone-Once -Repo $SndfileRepo -Branch "master" -Dest $SndfileSrc
 $SndfileBuild = Join-Path $BuildRoot "sndfile-static\build-windows"
 $SndfileInstall = Join-Path $InstallRoot "windows-x64-deps\sndfile"
 
+# -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded..." (here and on the other
+# two cmake configure calls below, plus the outer external build in
+# windows-build.yml) forces the static CRT (/MT, /MTd for Debug) - found
+# necessary via a real CI failure: max-sdk-base's own max-pretarget.cmake
+# forces this same /MT for us automatically, but ONLY
+# `if (CMAKE_GENERATOR MATCHES "Visual Studio")` - since we build with
+# Ninja instead (to sidestep the earlier "could not find any instance of
+# Visual Studio" issue), that block is skipped entirely, everything here
+# falls back to CMake's own default (dynamic CRT, /MD in Release), and the
+# final link against Cycling'74's prebuilt MaxAPI.lib/MaxAudio.lib (built
+# expecting /MT) fails with dozens of unresolved CRT symbols (rand,
+# access, write, ...) - a classic CRT-mismatch symptom, not missing code.
+# Setting this explicitly, generator-independent, restores what
+# max-pretarget.cmake would have done for the Visual Studio generator.
 Write-Host "==> building static libsndfile for Windows (x64)"
 cmake -S $SndfileSrc -B $SndfileBuild -G Ninja `
     -DCMAKE_BUILD_TYPE=Release `
+    -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded`$<`$<CONFIG:Debug>:Debug>" `
     -DCMAKE_INSTALL_PREFIX="$SndfileInstall" `
     -DBUILD_SHARED_LIBS=OFF `
     -DBUILD_PROGRAMS=OFF `
@@ -123,6 +138,7 @@ $SamplerateInstall = Join-Path $InstallRoot "windows-x64-deps\samplerate"
 Write-Host "==> building static libsamplerate for Windows (x64)"
 cmake -S $SamplerateSrc -B $SamplerateBuild -G Ninja `
     -DCMAKE_BUILD_TYPE=Release `
+    -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded`$<`$<CONFIG:Debug>:Debug>" `
     -DCMAKE_INSTALL_PREFIX="$SamplerateInstall" `
     -DBUILD_SHARED_LIBS=OFF `
     -DBUILD_TESTING=OFF `
@@ -225,6 +241,7 @@ Write-Host "    using dirent.h:   $DirentHeader"
 
 cmake -S $CsoundSrc -B $CsoundBuild -G Ninja `
     -DCMAKE_BUILD_TYPE=Release `
+    -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded`$<`$<CONFIG:Debug>:Debug>" `
     -DCMAKE_INSTALL_PREFIX="$WinInstall" `
     -DCMAKE_INCLUDE_PATH="$DirentDir" `
     -DBISON_EXECUTABLE="$BisonExe" `
