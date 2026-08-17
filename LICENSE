@@ -1,4 +1,4 @@
-csound7~ - Csound 7 statically embedded in a Max/MSP external
+csound7~ - Csound 7 embedded as a monolithic, statically-linked Max/MSP external
 Copyright (C) 2026 Anthony
 
 This program is free software: you can redistribute it and/or modify

@@ -34,8 +34,7 @@ relevant to what's being built here, and to what comes next
 - **Matt Ingalls** - created the original **`csound~` for Max/MSP**,
   later maintained by **Davis Pyon** before Steven Yi's Csound 6 update.
   Credited as a `csound.h` API author.
-- **Iain Duncan** (not to be confused with Iain McCurdy below - two
-  different people) - built **`csound6~`**
+- **Iain Duncan** - built **`csound6~`**
   ([iainctduncan/csound_max](https://github.com/iainctduncan/csound_max)),
   a minimal Max/MSP object using the Csound 6 API for lower latency than
   the legacy `csound~`, described by its own author as largely a port of

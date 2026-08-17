@@ -1,4 +1,4 @@
-# csound7~ — Csound 7 statically embedded in a Max/MSP external
+# csound7~ — Csound 7 embedded as a monolithic, statically-linked Max/MSP external
 
 A Max/MSP external (`csound7~`) that embeds the Csound 7 engine
 **statically** inside the binary: no separate Csound install needed on the
