@@ -75,6 +75,18 @@ if(APPLE)
     "-lpthread"
     "-lc++"
   )
+elseif(WIN32)
+  # Csound's static lib bundles a UDP server/console feature
+  # (csoundUDPServerStart etc.) that calls straight into Winsock (bind,
+  # htons, closesocket, gethostbyname, ...) - confirmed via a real CI
+  # failure on the PD side (identical Csound static lib, same missing
+  # symbols): 23 unresolved __imp_* Winsock symbols at link time.
+  # macOS/Linux get these from the C library itself (BSD sockets are part
+  # of libc there); Windows keeps them in a separate import library,
+  # ws2_32.lib, not linked by default the way kernel32/user32/etc. are -
+  # and not something MaxAPI.lib/MaxAudio.lib provide either, since this
+  # need comes from Csound itself, not from anything Max-specific.
+  target_link_libraries(csound7_tilde PRIVATE ws2_32)
 endif()
 
 # The static Csound lib bundles several C++ opcodes (mixer, ftsamplebank,
