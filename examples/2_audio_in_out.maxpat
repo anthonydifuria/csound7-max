@@ -10,38 +10,16 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ -372.0, -924.0, 535.0, 818.0 ],
+		"rect" : [ -372.0, -924.0, 710.0, 384.0 ],
 		"gridsize" : [ 15.0, 15.0 ],
 		"boxes" : [ 			{
-				"box" : 				{
-					"id" : "obj-7",
-					"maxclass" : "spectroscope~",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 68.0, 508.0, 300.0, 100.0 ]
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-5",
-					"maxclass" : "spectroscope~",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 31.0, 389.0, 300.0, 100.0 ]
-				}
-
-			}
-, 			{
 				"box" : 				{
 					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 3,
 					"numoutlets" : 3,
 					"outlettype" : [ "signal", "signal", "" ],
-					"patching_rect" : [ 205.830000000000013, 240.5, 185.0, 22.0 ],
+					"patching_rect" : [ 32.0, 236.0, 185.0, 22.0 ],
 					"text" : "csound7~ 2_audio_in_out.csd 32"
 				}
 
@@ -57,7 +35,7 @@
 					"numoutlets" : 2,
 					"outlettype" : [ "", "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 398.0, 86.0, 50.0, 22.0 ]
+					"patching_rect" : [ 197.0, 132.0, 50.0, 22.0 ]
 				}
 
 			}
@@ -68,7 +46,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 399.0, 145.0, 48.0, 22.0 ],
+					"patching_rect" : [ 198.0, 191.0, 48.0, 22.0 ],
 					"text" : "gain $1"
 				}
 
@@ -80,7 +58,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "signal" ],
-					"patching_rect" : [ 199.0, 93.0, 38.0, 22.0 ],
+					"patching_rect" : [ 32.0, 132.0, 38.0, 22.0 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 188.0, 104.0, 100.0, 22.0 ],
 					"text" : "pink~"
@@ -93,7 +71,7 @@
 					"maxclass" : "ezdac~",
 					"numinlets" : 2,
 					"numoutlets" : 0,
-					"patching_rect" : [ 61.0, 237.0, 45.0, 45.0 ]
+					"patching_rect" : [ 32.0, 311.0, 45.0, 45.0 ]
 				}
 
 			}
@@ -101,7 +79,7 @@
 		"lines" : [ 			{
 				"patchline" : 				{
 					"destination" : [ "obj-3", 1 ],
-					"order" : 0,
+					"midpoints" : [ 124.5, 284.25, 67.5, 284.25 ],
 					"source" : [ "obj-1", 1 ]
 				}
 
@@ -109,30 +87,15 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-3", 0 ],
-					"order" : 0,
+					"midpoints" : [ 41.5, 284.25, 41.5, 284.25 ],
 					"source" : [ "obj-1", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-5", 0 ],
-					"order" : 1,
-					"source" : [ "obj-1", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-7", 0 ],
-					"order" : 1,
-					"source" : [ "obj-1", 1 ]
 				}
 
 			}
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-1", 1 ],
+					"midpoints" : [ 41.5, 194.75, 124.5, 194.75 ],
 					"order" : 0,
 					"source" : [ "obj-2", 0 ]
 				}
@@ -141,6 +104,7 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
+					"midpoints" : [ 41.5, 194.75, 41.5, 194.75 ],
 					"order" : 1,
 					"source" : [ "obj-2", 0 ]
 				}
@@ -161,7 +125,7 @@
 
 			}
  ],
-		"originid" : "pat-6",
+		"originid" : "pat-1182",
 		"dependency_cache" : [ 			{
 				"name" : "csound7~.mxo",
 				"type" : "iLaX"

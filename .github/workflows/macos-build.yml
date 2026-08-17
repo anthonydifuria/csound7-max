@@ -1,0 +1,45 @@
+name: macOS build (Max/MSP)
+
+# Same build logic already verified locally by hand (this is the branch
+# that's been working the longest, since before Linux/Windows existed) -
+# this just automates it on GitHub's own macos-latest (Apple Silicon)
+# runner. Cross-compiles both arm64 and x86_64 into one universal binary,
+# same as a local build - no separate Intel Mac needed.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build static Csound + libsndfile + libsamplerate (universal)
+        run: bash scripts/build_csound_static.sh
+
+      - name: Configure
+        run: cmake -S . -B build/external -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build/external --config Release
+
+      - name: Verify external was produced
+        run: |
+          # .mxo is a bundle (directory), not a single file - test -d, and
+          # check for the actual Mach-O binary inside it.
+          test -d externals/csound7~.mxo || {
+            echo "externals/csound7~.mxo not found - build failed silently"
+            find build/external -maxdepth 2
+            exit 1
+          }
+          file externals/csound7~.mxo/Contents/MacOS/csound7~
+          lipo -info externals/csound7~.mxo/Contents/MacOS/csound7~
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: csound7-max-macos-universal
+          path: externals/csound7~.mxo

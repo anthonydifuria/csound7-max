@@ -10,9 +10,33 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ -136.0, -1120.0, 1000.0, 780.0 ],
+		"rect" : [ -136.0, -1121.0, 605.0, 343.0 ],
 		"gridsize" : [ 15.0, 15.0 ],
 		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-7",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 266.0, 89.0, 31.0, 22.0 ],
+					"text" : "stop"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-4",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 219.0, 89.0, 32.0, 22.0 ],
+					"text" : "start"
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"format" : 6,
 					"id" : "obj-11",
@@ -23,7 +47,7 @@
 					"numoutlets" : 2,
 					"outlettype" : [ "", "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 339.0, 111.0, 50.0, 22.0 ]
+					"patching_rect" : [ 36.0, 89.0, 50.0, 22.0 ]
 				}
 
 			}
@@ -38,7 +62,7 @@
 					"numoutlets" : 2,
 					"outlettype" : [ "", "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 462.0, 119.0, 50.0, 22.0 ]
+					"patching_rect" : [ 139.0, 89.0, 50.0, 22.0 ]
 				}
 
 			}
@@ -49,8 +73,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 444.0, 169.0, 49.0, 22.0 ],
-					"presentation_linecount" : 2,
+					"patching_rect" : [ 139.0, 135.0, 49.0, 22.0 ],
 					"text" : "amp $1"
 				}
 
@@ -62,7 +85,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 341.0, 165.0, 46.0, 22.0 ],
+					"patching_rect" : [ 36.0, 135.0, 46.0, 22.0 ],
 					"text" : "freq $1"
 				}
 
@@ -73,7 +96,7 @@
 					"maxclass" : "ezdac~",
 					"numinlets" : 2,
 					"numoutlets" : 0,
-					"patching_rect" : [ 239.0, 414.0, 45.0, 45.0 ]
+					"patching_rect" : [ 27.0, 268.0, 45.0, 45.0 ]
 				}
 
 			}
@@ -84,7 +107,7 @@
 					"numinlets" : 3,
 					"numoutlets" : 3,
 					"outlettype" : [ "signal", "signal", "" ],
-					"patching_rect" : [ 210.0, 240.0, 212.0, 22.0 ],
+					"patching_rect" : [ 27.0, 206.0, 212.0, 22.0 ],
 					"text" : "csound7~ 1_sine_two_controls.csd 32"
 				}
 
@@ -93,6 +116,7 @@
 		"lines" : [ 			{
 				"patchline" : 				{
 					"destination" : [ "obj-3", 1 ],
+					"midpoints" : [ 133.0, 246.78125, 62.5, 246.78125 ],
 					"source" : [ "obj-1", 1 ]
 				}
 
@@ -121,6 +145,14 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-1", 2 ],
+					"source" : [ "obj-4", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 2 ],
+					"midpoints" : [ 45.5, 181.5, 229.5, 181.5 ],
 					"source" : [ "obj-5", 0 ]
 				}
 
@@ -128,12 +160,20 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-1", 2 ],
+					"midpoints" : [ 148.5, 181.5, 229.5, 181.5 ],
 					"source" : [ "obj-6", 0 ]
 				}
 
 			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 2 ],
+					"source" : [ "obj-7", 0 ]
+				}
+
+			}
  ],
-		"originid" : "pat-9",
+		"originid" : "pat-4",
 		"dependency_cache" : [ 			{
 				"name" : "csound7~.mxo",
 				"type" : "iLaX"
