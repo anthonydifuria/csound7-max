@@ -199,6 +199,21 @@ if (-not (Test-Path $DirentHeader)) {
     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/tronkko/dirent/master/include/dirent.h" -OutFile $DirentHeader
 }
 
+# CMAKE_INCLUDE_PATH above only affects CMake's own find_file()/find_path()
+# lookups (that's what makes the configure-time check pass) - it does NOT
+# add this directory to the real compiler's include search path used when
+# actually building Csound's .c files, which is a separate mechanism.
+# Confirmed by a real CI failure one step further than the configure-time
+# one (identical build on the PD side): "fatal error C1083: Cannot open
+# include file: 'dirent.h'" while compiling Top/getstring.c, even though
+# HAVE_DIRENT_H was already defined. Fix: prepend to the %INCLUDE%
+# environment variable, which is what cl.exe itself reads for every
+# compile invocation regardless of how it was started (this is the same
+# mechanism vcvarsall.bat/ilammy/msvc-dev-cmd already used to expose the
+# standard MSVC/Windows SDK headers) - more reliable here than passing
+# -DCMAKE_C_FLAGS/-DCMAKE_CXX_FLAGS by hand.
+$env:INCLUDE = "$DirentDir;$env:INCLUDE"
+
 $CsoundSrc = Join-Path $BuildRoot "csound-static\src"
 Clone-Once -Repo $CsoundRepo -Branch $CsoundBranch -Dest $CsoundSrc
 $CsoundBuild = Join-Path $BuildRoot "csound-static\build-windows"
