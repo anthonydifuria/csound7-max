@@ -1,15 +1,18 @@
 # csound7~ — Csound 7 embedded as a monolithic, statically-linked Max/MSP external
 
+*by Anthony Di Furia — anthonydifuria.sound@gmail.com*
+
 A Max/MSP external (`csound7~`) that embeds the Csound 7 engine
 **statically** inside the binary: no separate Csound install needed on the
-end user's machine, no risk of version mismatch.
+end user's machine, no risk of version mismatch. Audio in/out inlets are
+sized automatically from your `.csd`, and a message protocol on the
+control inlet lets you set channels, trigger events, hot-recompile,
+bridge to `buffer~`, and more.
 
-This is an **aggressive first draft**, generated without being able to
-compile or test the code locally (I work in a Linux sandbox, no Xcode/Max
-available to me). Expect 1-2 rounds of fixes after the first real build on
-your Mac — that's normal for a project of this complexity. Every place
-where I had to make an assumption without being able to verify it is
-flagged with `// VERIFY:` in the code, or noted below.
+**For the full manual** (message protocol, what's forced by Max vs. left
+to the `.csd`, `@verbose`/`@ksmps`) **see `MANUAL.md`.** This file covers
+building and installing the external. Runnable examples are in
+`examples/`, and `help/csound7~.maxhelp` is the in-Max reference patch.
 
 ## License
 
@@ -25,184 +28,6 @@ alongside any compiled binary).
 See `ACKNOWLEDGMENTS.md` for credit to the Csound community and the
 prior `csound~` (Max/MSP) and `csoundapi~` (Pure Data) projects this one
 follows in the footsteps of.
-
-## What it does (summary of decisions made in chat)
-
-- **Universal binary** (arm64 + x86_64), buildable from a single Apple
-  Silicon Mac via cross-compile + `lipo`.
-- **Embedded Csound**: core opcodes + libsndfile + libsamplerate only, all
-  static. No Csound audio/MIDI/GUI/scripting backends — Max feeds audio
-  through the API (`csoundPerformKsmps`), not through a device.
-- **Audio inlets/outlets**: their count is derived automatically from
-  `nchnls`/`nchnls_i` read from the `.csd`/`.orc` file passed as the first
-  creation argument. You never type numbers by hand.
-- **File path**: the `.csd`/`.orc` argument (creation, `read`, `compile`)
-  can be a relative path (e.g. `test.csd`, or `examples/test.csd`) — it's
-  resolved through Max's own file search path (the folder containing the
-  open patcher, its subfolders, anything added in File Preferences, and
-  Packages), the same way Max resolves it for any other object. You only
-  need an absolute path if the file lives somewhere Max wouldn't normally
-  look. This also means the external itself does **not** need to live
-  inside `~/Documents/Max 9/Packages/` — a self-contained project folder
-  with your patcher, `csound7~.mxo`, and your `.csd` files side by side
-  (or in subfolders) works fine, since Max always searches the open
-  patcher's own folder.
-- **Control inlet/outlet**: one per side, placed after the audio ones, using
-  a generic message protocol. See below.
-- **MIDI**: via "host MIDI IO" (`csoundSetHostMIDIIO` + a read callback),
-  not via `csoundPushMidiMessage` — that function **does not exist** in the
-  Csound 7 API I verified from source (`develop` branch), contrary to what
-  we assumed out loud earlier in chat. The real mechanism is functionally
-  equivalent: Csound calls our callback to "pull" MIDI bytes from an
-  internal queue that we fill from Max messages.
-- **Live coding**: `csoundCompileOrc` at runtime, explicit only (never
-  automatic), triggered by a `compile` message.
-- **Sample rate**: automatic sync with Max, automatic reset+recompile if it
-  changes while running.
-- **Ksmps**: controlled by the `.csd`/`.orc` itself by default (its own
-  `ksmps = N` line, or Csound's own default if it doesn't set one) -
-  exactly like running Csound standalone. An internal ring buffer
-  decouples Csound's blocks from Max's vector size, so whatever value
-  Csound ends up with just works. Only forced from the Max side if you
-  explicitly ask for it (creation arg or `@ksmps` attribute, see below).
-- **Csound tables <-> Max buffer~**: bidirectional bridging.
-- **Dynamic plugins**: a `plugins/` folder next to the external, loaded with
-  `csoundLoadPlugins()` on every startup — drop extra opcode `.dylib` files
-  in there (e.g. faust, fluidsynth) with no need to rebuild anything.
-
-## Control inlet/outlet protocol (the last one, messages)
-
-Send these messages to the control inlet (rightmost one, shown visually
-as the last inlet). Note: they're actually accepted from **any** inlet,
-not strictly enforced to the rightmost one - matching how the official
-`csound~` for Max (see `ACKNOWLEDGMENTS.md`) works too, its control
-methods aren't inlet-restricted either. The rightmost inlet is still the
-intended/documented one to use.
-
-- `<name> <value>` → sets the Csound control channel called `<name>` to
-  `<value>` (`csoundSetControlChannel`). Just a plain message box like
-  `amp 0.3` or `freq $1`, or use a `pack`/message combo for a name that
-  changes at runtime. Read it inside Csound with `kval invalue "name"`
-  or `kval chnget "name"`. (Any message whose first word isn't one of
-  the reserved ones on this list - `event`, `start`, `stop`, `channels`,
-  `read`, `compile`, `reset`, `midi`, `buf2tab`, `tab2buf` - is treated
-  this way, with the message's own name as the channel name.)
-- **To receive values from Csound back into Max** you must use the
-  `outvalue "name", kval` opcode (not plain `chnset`) — it's the only one
-  that triggers a push notification to the host. With plain `chnset` Csound
-  never notifies anyone, the value just sits there passively and nothing
-  gets sent out.
-- `event i 1 0 -1 440 0.5` → turns on (held note, negative duration) an
-  instance of instrument 1 with those parameters.
-- `event i -1 0 0` → turns off the held instance of instrument 1 (standard
-  Csound convention: same instrument number, negated).
-- `start` → resumes the whole performance (if paused with `stop`).
-  Doesn't touch engine state - whatever was running keeps running from
-  where it left off.
-- `stop` → pauses the whole performance in place: outputs silence,
-  nothing in the engine advances (no k-cycles, no time passing) until
-  `start`. Not the same as `reset`, which recompiles from scratch.
-  Which instruments play, and when, is entirely up to you via `event`
-  and ordinary Csound orchestra/score code, same as it's always been in
-  Csound - `start`/`stop` only gate the whole performance on/off.
-- `channels` → the external dumps a `channel <name> <type>` message out the
-  control outlet for every channel currently alive in Csound (handy after a
-  live recompile to see what you just created).
-- `read <absolute path>` → sets the orchestra file used by `compile`.
-- `compile` → recompiles by reading the file set with `read` (or the one
-  passed as a creation argument). Never automatic, only on command.
-- `compile <absolute path>` → sets the path and recompiles in one shot.
-- `buf2tab <buffer~ name> <table number>` → copies samples from a Max
-  `buffer~` into a Csound f-table (created/resized as needed).
-- `tab2buf <table number> <buffer~ name>` → copies the other way, from the
-  Csound table into the `buffer~`.
-- `reset` → full `csoundReset`, then recompiles the current file from
-  scratch.
-- `verbose <0-231>` also works as a plain runtime message (see below —
-  it's actually a real attribute, but Max dispatches attribute-named
-  messages the same way).
-
-## What's controlled by the `.csd` vs. what's forced by Max
-
-Some parameters are structurally required to be forced from the Max side
-because they're needed before the file is even read, or because Max's
-own audio engine has to agree with Csound on them - this is unavoidable
-when embedding Csound live inside another audio host, not us being
-controlling for its own sake:
-
-- **sr** - always forced to match Max's current sample rate, with an
-  automatic reset+recompile if it changes. Max's DSP chain and Csound
-  must run at the same rate.
-- **nchnls / nchnls_i** - always forced, but the values come *from* the
-  `.csd` itself (parsed out before the object's inlets/outlets are even
-  created, since Max's I/O count is fixed at creation time and can't
-  grow later). This mirrors the file's own declaration, it doesn't
-  override it with something arbitrary.
-- **`-n` (nosound), `-+rtaudio=null`, `-+rtmidi=null`** - always forced,
-  applied *after* your own `<CsOptions>` (see below) so nothing you put
-  there can override them. These aren't musical parameters, they're what
-  makes host-driven audio/MIDI (via the API) possible at all; anything
-  else here (e.g. an `-odac`) would break the whole embedding model.
-
-Everything else is left to the `.csd`/`.orc` as normal Csound, most
-notably:
-
-- **ksmps** - your file's own `ksmps = N` line decides, by default. Only
-  overridden if you explicitly pass a ksmps creation arg or set
-  `@ksmps` (see below).
-- Everything inside `<CsInstruments>`/`<CsScore>` - opcodes, instruments,
-  tables, score events - is entirely yours, untouched.
-
-`<CsOptions>` itself DOES work, but not the normal way: `csoundStart()`
-runs before `csoundCompileCSD()` on purpose (see the ordering note
-above), and per `csound.h` that means `csoundCompileCSD()`'s own
-`<CsOptions>` handling never gets a chance to run - anything set that way
-would apply too late. So the external reads `<CsOptions>` itself, as
-plain text, and applies each flag via the API *before* `csoundStart()` -
-functionally equivalent to a normal Csound `.csd`, just handled by hand
-because of the ordering constraint. Anything in there gets applied,
-except the small always-forced set above, which wins if there's a
-conflict. Needed a real-world MIDI input flag (`-M0`) to reach this at
-all, which is what prompted building this instead of leaving `<CsOptions>`
-dead.
-
-## Console verbosity (`@verbose`)
-
-`verbose` is a real Max **attribute**, not just a message — the
-Max-native equivalent of a Csound `-m` command-line flag. You can also
-just put `-m<N>` directly in `<CsOptions>` now (see above); `@verbose`
-additionally lets you change it live, at any time, from the control
-inlet, which a `.csd`'s own `<CsOptions>` can't do. Sets Csound's console
-message level (`csoundSetMessageLevel`, range `0-231`), default `0` =
-quiet (no note-amplitude/out-of-range/benchmark chatter). Real compile
-errors and warnings always print regardless of this setting.
-
-Three ways to use it, all equivalent:
-
-- As a creation flag: `csound7~ test.csd 32 @verbose 1`
-- As a runtime message to the control inlet: `verbose 1`
-- From the object's Inspector (right-click → Inspector), where it shows
-  up as "Console Verbosity (0-231)"
-
-## Forcing ksmps (`@ksmps`)
-
-By default ksmps comes from the `.csd` itself (see above). If you do
-want Max to force a specific value instead, two equivalent ways:
-
-- The second creation arg, numeric: `csound7~ test.csd 32` (32 = ksmps)
-- The `@ksmps` attribute, any time: `csound7~ test.csd @ksmps 32`, or as
-  a runtime message `ksmps 32` / from the Inspector
-
-Changing `@ksmps` while running triggers a full reset+recompile (ksmps
-is only settled at `csoundStart()` time, same reason an automatic sr
-change does too). Setting it back to unforced isn't currently exposed -
-recreate the object without the arg/attribute if you want to hand
-control back to the `.csd`.
-
-MIDI: send `midi <status> <data1> <data2>` (3 ints) to the control inlet —
-connect `midiin` → your own `pack`/reformatting upstream, then
-`notein`/`massign` will work inside Csound, reading from the internal
-queue.
 
 ## Prerequisites to build
 
@@ -279,60 +104,66 @@ follow the Max package convention).
 
 ## Windows
 
-Implemented via `scripts/build_csound_static.ps1` (PowerShell, MSVC
-toolchain) and `../.github/workflows/windows-build.yml` (a GitHub Actions
-`windows-latest` runner, as a separate job from the PD side) - but
-**unverified**, written without access to a Windows machine. Meant to be
-proven for real by that workflow's first actual run (or by you, on a real
-Windows box) - the same "aggressive first draft" situation the macOS build
-script was in before its first real compile, just without a way for me to
-close the loop myself this time.
+Builds successfully via `scripts/build_csound_static.ps1` (PowerShell,
+MSVC toolchain) and `.github/workflows/windows-build.yml` (GitHub Actions
+`windows-latest` runner) - verified with real CI runs, not just assumed
+from reading the build files. Getting there took a few real rounds of
+fixes, kept here as a record of the non-obvious gotchas:
 
-The good news: unlike the PD side (which had to solve MSVC's refusal to
-link a DLL with unresolved symbols by hand, see `../PD/README.md`'s own
-Windows section), the Max SDK itself ships real, prebuilt Windows import
-libraries directly inside `max-sdk-base`
-(`c74support/max-includes/x64/MaxAPI.lib`,
-`c74support/msp-includes/x64/MaxAudio.lib` - confirmed by actually
-fetching `max-sdk-base` and looking, not assumed), and its own
-`FindMaxSDK.cmake`/`max-posttarget.cmake` scripts already wire these up
-automatically through the `max::external`/`max::glob` directory properties
-this project's `source/csound7_tilde/CMakeLists.txt` already sets - along
-with the `.mxe64` Windows output suffix, also confirmed directly in
-`max-posttarget.cmake`. Nothing extra was needed for that part; the only
-real changes were guarding the macOS-only framework/`-lc++`/`-lpthread`
-linker lines behind `if(APPLE)` (previously unconditional - would have
-broken Windows's linker outright) and fixing the static Csound/libsndfile/
-libsamplerate lib file lookups to try Windows-appropriate `.lib` names via
-`find_library()` rather than the hardcoded `.a` names.
+- CMake couldn't auto-detect Visual Studio on the runner ("Generator
+  Visual Studio 17 2022 could not find any instance of Visual Studio"),
+  even though it's installed there - switched to the Ninja generator
+  with `ilammy/msvc-dev-cmd@v1` setting up the compiler on `PATH`
+  explicitly instead of relying on CMake's own VS-instance discovery.
+- Csound's own CMakeLists.txt hard-fails on MSVC without a `dirent.h`
+  (a POSIX header MSVC doesn't ship) - fixed by fetching the well-known
+  `tronkko/dirent` single-header shim and pointing the compiler at it.
+- `csound7_tilde.c` used `pthread_mutex_t`/`strcasecmp` directly - neither
+  exists on MSVC. Shimmed locally with a Win32 `CRITICAL_SECTION`-backed
+  mutex and `_stricmp`, active only `#ifdef _WIN32`.
+- The final link failed with dozens of unresolved Winsock symbols
+  (`bind`, `htons`, ...) - Csound's static lib bundles a UDP
+  server/console feature that needs `ws2_32.lib`, not linked by default.
+- The final link also failed with unresolved CRT symbols (`rand`,
+  `access`, ...) - a runtime-library mismatch: `max-sdk-base`'s own
+  `max-pretarget.cmake` forces the static CRT (`/MT`) to match its
+  prebuilt `MaxAPI.lib`/`MaxAudio.lib`, but only
+  `if (CMAKE_GENERATOR MATCHES "Visual Studio")` - since Ninja is used
+  instead (see above), that forcing was skipped. Fixed by setting
+  `CMAKE_MSVC_RUNTIME_LIBRARY` to the same static-CRT value ourselves,
+  generator-independently.
 
-If the first CI run fails, that's expected and useful - the two spots
-flagged `UNVERIFIED` in `build_csound_static.ps1` (whether Csound's own
-codebase compiles clean under MSVC without patches, and whether
-`winflexbison`'s bison/flex behave closely enough to GNU's for Csound's
-grammar files) are the most likely places a real fix will be needed.
+Unlike the PD side (which had to solve MSVC's refusal to link a DLL with
+unresolved *host* symbols by hand, via a hand-written stub import
+library - see the `csound7-pd` repo's own Windows notes), the Max SDK
+itself ships real, prebuilt Windows import libraries directly inside
+`max-sdk-base` (`c74support/max-includes/x64/MaxAPI.lib`,
+`c74support/msp-includes/x64/MaxAudio.lib`), and its own
+`FindMaxSDK.cmake`/`max-posttarget.cmake` scripts wire these up
+automatically - including the `.mxe64` output suffix - through the
+`max::external`/`max::glob` directory properties this project's
+`source/csound7_tilde/CMakeLists.txt` already sets.
 
 ## Files in this repo
 
+- `MANUAL.md` — full reference: message protocol, `.csd` vs. Max-forced
+  parameters, `@verbose`/`@ksmps`.
 - `CMakeLists.txt` — top level, bridges into max-sdk-base.
 - `source/csound7_tilde/` — the external's source code.
-- `scripts/build_csound_static.sh` — static universal Csound build.
-- `examples/test.csd` — minimal test orchestra (single 400Hz tone, used
-  for the initial "does audio come out at all" check).
-- `examples/1_sine_two_controls.csd` — one oscillator, two live controls
-  (`freq`, `amp`) from Max.
-- `examples/2_audio_in_out.csd` — audio in -> audio out, with a `gain`
-  control.
-- `examples/3_buffer_player.csd` — `buffer~` -> table sample player
-  (`buf2tab`, then `phasor`+`tablei`), with `rate`/`amp` controls.
-- `examples/4_midi_synth.csd` — one-oscillator MIDI synth with an
-  envelope, driven by `midi <status> <data1> <data2>` messages.
+- `scripts/build_csound_static.sh` / `.ps1` — static Csound build
+  (macOS/Windows).
+- `examples/` — six runnable example patches + matching `.csd` files:
+  a two-control oscillator, audio in/out with gain, a buffer~/table
+  player, a MIDI synth, disk-streamed playback, and table-based WAV
+  playback. Also `examples/test.csd`, a minimal single-tone orchestra
+  used for the initial "does audio come out at all" check.
+- `help/csound7~.maxhelp` — the object's in-Max help patch (navigable,
+  one bpatcher per example).
 - `plugins/` — empty folder (with README) where you drop extra opcode
   `.dylib` files loaded dynamically.
-
-These four are untested first drafts, same as everything else in this
-project's first pass — expect to send me the real compile/console
-output if any opcode name or rate mismatch trips something up.
+- `.github/workflows/` — CI: builds macOS and Windows on every push (no
+  Linux job here - Max/MSP doesn't run on Linux; see the `csound7-pd`
+  repo for that one).
 
 ## References
 

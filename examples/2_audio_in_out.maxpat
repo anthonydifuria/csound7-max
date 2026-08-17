@@ -75,6 +75,40 @@
 				}
 
 			}
+, 			{
+				"box" : 				{
+					"id" : "cmt-1",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 32.0, 95.0, 200.0, 20.0 ],
+					"text" : "pink noise -> audio in"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "cmt-2",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 197.0, 65.0, 100.0, 20.0 ],
+					"text" : "gain (0-1)"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "cmt-3",
+					"linecount" : 2,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 225.0, 236.0, 280.0, 33.0 ],
+					"text" : "audio in on inlets 1-2 (L/R), control messages on the rightmost inlet"
+				}
+
+			}
  ],
 		"lines" : [ 			{
 				"patchline" : 				{

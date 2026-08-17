@@ -112,6 +112,51 @@
 				}
 
 			}
+, 			{
+				"box" : 				{
+					"id" : "cmt-1",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 36.0, 50.0, 100.0, 20.0 ],
+					"text" : "frequency (Hz)"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "cmt-2",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 139.0, 50.0, 110.0, 20.0 ],
+					"text" : "amplitude (0-1)"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "cmt-3",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 219.0, 22.0, 130.0, 20.0 ],
+					"text" : "start / stop engine"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "cmt-4",
+					"linecount" : 2,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 245.0, 206.0, 260.0, 33.0 ],
+					"text" : "csound7~ <csd file> <ksmps> - control messages go to the RIGHTMOST inlet"
+				}
+
+			}
  ],
 		"lines" : [ 			{
 				"patchline" : 				{

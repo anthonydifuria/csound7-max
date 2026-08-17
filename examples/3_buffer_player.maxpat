@@ -10,62 +10,16 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ -367.0, -1331.0, 767.0, 1297.0 ],
+		"rect" : [ 134.0, 93.0, 768.0, 420.0 ],
 		"gridsize" : [ 15.0, 15.0 ],
 		"boxes" : [ 			{
-				"box" : 				{
-					"id" : "obj-20",
-					"maxclass" : "button",
-					"numinlets" : 1,
-					"numoutlets" : 1,
-					"outlettype" : [ "bang" ],
-					"parameter_enable" : 0,
-					"patching_rect" : [ 401.0, 678.0, 24.0, 24.0 ]
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-17",
-					"maxclass" : "newobj",
-					"numinlets" : 1,
-					"numoutlets" : 2,
-					"outlettype" : [ "", "bang" ],
-					"patching_rect" : [ 387.220000000000027, 729.470000000000027, 67.0, 22.0 ],
-					"text" : "opendialog"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-8",
-					"maxclass" : "ezdac~",
-					"numinlets" : 2,
-					"numoutlets" : 0,
-					"patching_rect" : [ 125.0, 1017.0, 45.0, 45.0 ]
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-11",
-					"maxclass" : "newobj",
-					"numinlets" : 3,
-					"numoutlets" : 3,
-					"outlettype" : [ "signal", "signal", "" ],
-					"patching_rect" : [ 65.0, 775.0, 186.0, 22.0 ],
-					"text" : "csound7~ 5_diskin_player.csd 32"
-				}
-
-			}
-, 			{
 				"box" : 				{
 					"id" : "obj-6",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 376.0, 61.0, 72.0, 22.0 ],
+					"patching_rect" : [ 383.0, 187.0, 72.0, 22.0 ],
 					"text" : "buf_sr_1 $1"
 				}
 
@@ -77,8 +31,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 197.0, 373.0, 50.0, 22.0 ],
-					"text" : "1"
+					"patching_rect" : [ 41.0, 356.0, 50.0, 22.0 ],
+					"text" : "48000."
 				}
 
 			}
@@ -90,7 +44,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 105.0, 227.0, 24.0, 24.0 ]
+					"patching_rect" : [ 72.0, 250.0, 24.0, 24.0 ]
 				}
 
 			}
@@ -101,7 +55,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 10,
 					"outlettype" : [ "float", "list", "float", "float", "float", "float", "float", "", "int", "" ],
-					"patching_rect" : [ 72.0, 285.0, 184.0, 22.0 ],
+					"patching_rect" : [ 72.0, 298.0, 184.0, 22.0 ],
 					"text" : "info~ test"
 				}
 
@@ -113,7 +67,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 211.0, 138.0, 39.0, 22.0 ],
+					"patching_rect" : [ 81.0, 102.0, 39.0, 22.0 ],
 					"text" : "dump"
 				}
 
@@ -125,7 +79,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 467.0, 45.0, 78.0, 22.0 ],
+					"patching_rect" : [ 490.0, 97.0, 78.0, 22.0 ],
 					"text" : "event i -1 0 0"
 				}
 
@@ -137,7 +91,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 456.95999999999998, 19.0, 78.0, 22.0 ],
+					"patching_rect" : [ 476.0, 67.0, 78.0, 22.0 ],
 					"text" : "event i 1 0 -1"
 				}
 
@@ -149,7 +103,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 593.0, 228.0, 39.0, 22.0 ],
+					"patching_rect" : [ 638.0, 187.0, 39.0, 22.0 ],
 					"text" : "rate 1"
 				}
 
@@ -161,7 +115,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 552.0, 184.0, 42.0, 22.0 ],
+					"patching_rect" : [ 586.0, 187.0, 42.0, 22.0 ],
 					"text" : "amp 1"
 				}
 
@@ -173,7 +127,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 495.0, 104.0, 81.0, 22.0 ],
+					"patching_rect" : [ 490.0, 187.0, 81.0, 22.0 ],
 					"text" : "buf2tab test 1"
 				}
 
@@ -184,7 +138,7 @@
 					"maxclass" : "ezdac~",
 					"numinlets" : 2,
 					"numoutlets" : 0,
-					"patching_rect" : [ 350.829999999999984, 520.669999999999959, 45.0, 45.0 ]
+					"patching_rect" : [ 291.0, 350.0, 45.0, 45.0 ]
 				}
 
 			}
@@ -195,7 +149,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 100.0, 69.0, 48.0, 22.0 ],
+					"patching_rect" : [ 22.0, 102.0, 48.0, 22.0 ],
 					"text" : "replace"
 				}
 
@@ -207,7 +161,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "float", "bang" ],
-					"patching_rect" : [ 72.159999999999997, 140.780000000000001, 69.0, 22.0 ],
+					"patching_rect" : [ 22.0, 171.0, 69.0, 22.0 ],
 					"text" : "buffer~ test"
 				}
 
@@ -219,8 +173,78 @@
 					"numinlets" : 3,
 					"numoutlets" : 3,
 					"outlettype" : [ "signal", "signal", "" ],
-					"patching_rect" : [ 290.95999999999998, 278.680000000000007, 185.0, 22.0 ],
+					"patching_rect" : [ 291.0, 298.0, 185.0, 22.0 ],
 					"text" : "csound7~ 3_buffer_player.csd 32"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "cmt-1",
+					"linecount" : 2,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 22.0, 55.0, 263.0, 33.0 ],
+					"text" : "1. load a MONO soundfile into buffer~ \"test\" (or \"dump\" to print its info)"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "cmt-2",
+					"linecount" : 2,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 3.0, 380.0, 276.0, 33.0 ],
+					"text" : "info~ reads the buffer's real samplerate - triggered automatically after buf2tab (see connection below)"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "cmt-3",
+					"linecount" : 2,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 455.0, 150.0, 300.0, 33.0 ],
+					"text" : "2. buf2tab test 1 -> loads buffer into Csound + auto-sends the real samplerate"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "cmt-4",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 476.0, 34.0, 92.0, 20.0 ],
+					"text" : "3. start / stop"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "cmt-5",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 586.0, 213.0, 150.0, 20.0 ],
+					"text" : "optional, while playing"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "cmt-6",
+					"linecount" : 2,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 485.0, 298.0, 260.0, 33.0 ],
+					"text" : "control messages -> rightmost inlet; csd: 3_buffer_player.csd"
 				}
 
 			}
@@ -228,6 +252,7 @@
 		"lines" : [ 			{
 				"patchline" : 				{
 					"destination" : [ "obj-5", 1 ],
+					"midpoints" : [ 383.5, 334.840000000000032, 326.5, 334.840000000000032 ],
 					"source" : [ "obj-1", 1 ]
 				}
 
@@ -235,6 +260,7 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-5", 0 ],
+					"midpoints" : [ 300.5, 334.840000000000032, 300.5, 334.840000000000032 ],
 					"source" : [ "obj-1", 0 ]
 				}
 
@@ -243,20 +269,6 @@
 				"patchline" : 				{
 					"destination" : [ "obj-1", 2 ],
 					"source" : [ "obj-10", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-8", 1 ],
-					"source" : [ "obj-11", 1 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-8", 0 ],
-					"source" : [ "obj-11", 0 ]
 				}
 
 			}
@@ -277,13 +289,15 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-18", 1 ],
-					"source" : [ "obj-14", 8 ]
+					"order" : 1,
+					"source" : [ "obj-14", 0 ]
 				}
 
 			}
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-6", 0 ],
+					"order" : 0,
 					"source" : [ "obj-14", 0 ]
 				}
 
@@ -292,13 +306,6 @@
 				"patchline" : 				{
 					"destination" : [ "obj-14", 0 ],
 					"source" : [ "obj-16", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-17", 0 ],
-					"source" : [ "obj-20", 0 ]
 				}
 
 			}
@@ -347,7 +354,7 @@
 
 			}
  ],
-		"originid" : "pat-4",
+		"originid" : "pat-1238",
 		"dependency_cache" : [ 			{
 				"name" : "csound7~.mxo",
 				"type" : "iLaX"

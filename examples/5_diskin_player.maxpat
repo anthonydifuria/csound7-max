@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ -194.0, -885.0, 700.0, 560.0 ],
+		"rect" : [ 134.0, 165.0, 585.0, 552.0 ],
 		"gridsize" : [ 15.0, 15.0 ],
 		"boxes" : [ 			{
 				"box" : 				{
@@ -20,7 +20,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 40.0, 40.0, 24.0, 24.0 ]
+					"patching_rect" : [ 40.0, 88.0, 24.0, 24.0 ]
 				}
 
 			}
@@ -30,7 +30,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 80.0, 44.0, 260.0, 20.0 ],
+					"patching_rect" : [ 80.0, 92.0, 260.0, 20.0 ],
 					"text" : "1. click to pick a WAV/AIFF/MP3 file"
 				}
 
@@ -42,7 +42,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "bang" ],
-					"patching_rect" : [ 40.0, 90.0, 100.0, 22.0 ],
+					"patching_rect" : [ 40.0, 138.0, 100.0, 22.0 ],
 					"text" : "opendialog"
 				}
 
@@ -54,7 +54,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 40.0, 140.0, 200.0, 22.0 ],
+					"patching_rect" : [ 40.0, 188.0, 200.0, 22.0 ],
 					"text" : "prepend diskinfile wavpath"
 				}
 
@@ -65,7 +65,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 250.0, 144.0, 300.0, 20.0 ],
+					"patching_rect" : [ 250.0, 192.0, 300.0, 20.0 ],
 					"text" : "sends \"diskinfile wavpath <path>\" to csound7~"
 				}
 
@@ -77,7 +77,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 40.0, 190.0, 90.0, 22.0 ],
+					"patching_rect" : [ 40.0, 238.0, 90.0, 22.0 ],
 					"text" : "event i 1 0 -1"
 				}
 
@@ -88,7 +88,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 140.0, 194.0, 200.0, 20.0 ],
+					"patching_rect" : [ 140.0, 242.0, 200.0, 20.0 ],
 					"text" : "2. play - do this AFTER step 1"
 				}
 
@@ -100,7 +100,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 40.0, 230.0, 90.0, 22.0 ],
+					"patching_rect" : [ 40.0, 278.0, 90.0, 22.0 ],
 					"text" : "event i -1 0 0"
 				}
 
@@ -111,7 +111,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 140.0, 234.0, 100.0, 20.0 ],
+					"patching_rect" : [ 140.0, 282.0, 100.0, 20.0 ],
 					"text" : "3. stop"
 				}
 
@@ -123,7 +123,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 321.0, 334.0, 93.0, 22.0 ],
+					"patching_rect" : [ 321.0, 382.0, 93.0, 22.0 ],
 					"text" : "wavamp 0.0001"
 				}
 
@@ -134,7 +134,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 220.0, 284.0, 220.0, 20.0 ],
+					"patching_rect" : [ 220.0, 332.0, 220.0, 20.0 ],
 					"text" : "optional, any time while it plays"
 				}
 
@@ -146,7 +146,7 @@
 					"numinlets" : 3,
 					"numoutlets" : 3,
 					"outlettype" : [ "signal", "signal", "" ],
-					"patching_rect" : [ 41.0, 340.0, 186.0, 22.0 ],
+					"patching_rect" : [ 41.0, 388.0, 186.0, 22.0 ],
 					"text" : "csound7~ 5_diskin_player.csd 32"
 				}
 
@@ -157,7 +157,7 @@
 					"maxclass" : "ezdac~",
 					"numinlets" : 2,
 					"numoutlets" : 0,
-					"patching_rect" : [ 40.0, 420.0, 45.0, 45.0 ]
+					"patching_rect" : [ 40.0, 468.0, 45.0, 45.0 ]
 				}
 
 			}
@@ -219,7 +219,7 @@
 
 			}
  ],
-		"originid" : "pat-12",
+		"originid" : "pat-1228",
 		"dependency_cache" : [ 			{
 				"name" : "csound7~.mxo",
 				"type" : "iLaX"
