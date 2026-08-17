@@ -1,0 +1,47 @@
+name: Windows build (Max/MSP)
+
+# UNVERIFIED end-to-end - scripts/build_csound_static.ps1 was written from
+# research but never run on a real Windows machine. Lower risk than the PD
+# side though: Cycling'74's max-sdk-base ships real prebuilt Windows import
+# libraries (MaxAPI.lib, MaxAudio.lib) and its own CMake tooling already
+# handles .mxe64 output automatically - confirmed by fetching max-sdk-base
+# directly, not assumed. See README.md's "Windows" section for details.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bison/flex (winflexbison)
+        run: choco install winflexbison3 -y
+
+      - name: Build static Csound + libsndfile + libsamplerate
+        shell: pwsh
+        run: ./scripts/build_csound_static.ps1
+
+      - name: Configure
+        run: cmake -S . -B build/external -G "Visual Studio 17 2022" -A x64
+
+      - name: Build
+        run: cmake --build build/external --config Release
+
+      - name: Verify external was produced
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "externals/csound7~.mxe64")) {
+            Write-Host "externals/csound7~.mxe64 not found - build failed silently"
+            Get-ChildItem -Recurse build/external -Depth 2
+            exit 1
+          }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: csound7-max-windows-x64
+          path: externals/csound7~.mxe64
