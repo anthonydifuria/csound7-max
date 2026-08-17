@@ -42,10 +42,21 @@ $WinInstall = Join-Path $InstallRoot "windows-x64"
 #    executables are named win_bison.exe/win_flex.exe, not bison.exe/
 #    flex.exe - passed straight to CMake's -DBISON_EXECUTABLE/
 #    -DFLEX_EXECUTABLE (same mechanism the macOS/Linux script uses), no
-#    renaming needed. cmake and the MSVC toolchain itself (via the Visual
-#    Studio generator, which locates cl.exe/link.exe on its own - no
-#    vcvarsall/Developer Command Prompt setup needed first) are assumed
-#    already present, same as GitHub's windows-latest runner image ships.
+#    renaming needed.
+#
+#    Generator: uses Ninja, not "Visual Studio 17 2022" as originally
+#    written. First real GitHub Actions run of the PD side's copy of this
+#    script failed at the very first cmake call with "Generator Visual
+#    Studio 17 2022 could not find any instance of Visual Studio" - even
+#    though windows-latest runners do have VS2022 installed, CMake's own
+#    VS-instance auto-detection didn't find it in that environment. Ninja
+#    sidesteps that detection path entirely: it just needs cl.exe/link.exe
+#    on PATH, which the ilammy/msvc-dev-cmd@v1 GitHub Action step (added
+#    to windows-build.yml right after checkout) sets up explicitly via
+#    vcvarsall.bat, so CMake never has to auto-discover anything. Also
+#    means Debug/Release is chosen at configure time via CMAKE_BUILD_TYPE
+#    like the Linux/macOS branches, not via --config at build time like
+#    the VS generator needed.
 # ---------------------------------------------------------------------
 function Find-Tool {
     param([string[]]$Names, [string]$InstallHint)
@@ -75,11 +86,9 @@ function Clone-Once {
 
 # ---------------------------------------------------------------------
 # 1. libsndfile, static - same flags/reasoning as the macOS/Linux script,
-#    this part is genuinely OS-agnostic CMake. Visual Studio's own
-#    generator is multi-config (Release/Debug chosen at build time, not
-#    configure time), unlike the single-config Unix Makefiles generator
-#    the other two branches use - hence --config Release on the build/
-#    install steps below instead of a -DCMAKE_BUILD_TYPE= configure flag.
+#    this part is genuinely OS-agnostic CMake. Ninja is single-config
+#    (Release chosen at configure time via CMAKE_BUILD_TYPE), like the
+#    Unix Makefiles generator the other two branches use.
 # ---------------------------------------------------------------------
 $SndfileSrc = Join-Path $BuildRoot "sndfile-static\src"
 Clone-Once -Repo $SndfileRepo -Branch "master" -Dest $SndfileSrc
@@ -87,7 +96,8 @@ $SndfileBuild = Join-Path $BuildRoot "sndfile-static\build-windows"
 $SndfileInstall = Join-Path $InstallRoot "windows-x64-deps\sndfile"
 
 Write-Host "==> building static libsndfile for Windows (x64)"
-cmake -S $SndfileSrc -B $SndfileBuild -G "Visual Studio 17 2022" -A x64 `
+cmake -S $SndfileSrc -B $SndfileBuild -G Ninja `
+    -DCMAKE_BUILD_TYPE=Release `
     -DCMAKE_INSTALL_PREFIX="$SndfileInstall" `
     -DBUILD_SHARED_LIBS=OFF `
     -DBUILD_PROGRAMS=OFF `
@@ -97,9 +107,9 @@ cmake -S $SndfileSrc -B $SndfileBuild -G "Visual Studio 17 2022" -A x64 `
     -DENABLE_MPEG=OFF `
     -DENABLE_CPACK=OFF
 if ($LASTEXITCODE -ne 0) { throw "libsndfile configure failed" }
-cmake --build $SndfileBuild --config Release
+cmake --build $SndfileBuild
 if ($LASTEXITCODE -ne 0) { throw "libsndfile build failed" }
-cmake --install $SndfileBuild --config Release
+cmake --install $SndfileBuild
 if ($LASTEXITCODE -ne 0) { throw "libsndfile install failed" }
 
 # ---------------------------------------------------------------------
@@ -111,16 +121,17 @@ $SamplerateBuild = Join-Path $BuildRoot "samplerate-static\build-windows"
 $SamplerateInstall = Join-Path $InstallRoot "windows-x64-deps\samplerate"
 
 Write-Host "==> building static libsamplerate for Windows (x64)"
-cmake -S $SamplerateSrc -B $SamplerateBuild -G "Visual Studio 17 2022" -A x64 `
+cmake -S $SamplerateSrc -B $SamplerateBuild -G Ninja `
+    -DCMAKE_BUILD_TYPE=Release `
     -DCMAKE_INSTALL_PREFIX="$SamplerateInstall" `
     -DBUILD_SHARED_LIBS=OFF `
     -DBUILD_TESTING=OFF `
     -DLIBSAMPLERATE_EXAMPLES=OFF `
     -DLIBSAMPLERATE_INSTALL=ON
 if ($LASTEXITCODE -ne 0) { throw "libsamplerate configure failed" }
-cmake --build $SamplerateBuild --config Release
+cmake --build $SamplerateBuild
 if ($LASTEXITCODE -ne 0) { throw "libsamplerate build failed" }
-cmake --install $SamplerateBuild --config Release
+cmake --install $SamplerateBuild
 if ($LASTEXITCODE -ne 0) { throw "libsamplerate install failed" }
 
 # find_library-style lookup rather than a single hardcoded name - CMake's
@@ -176,7 +187,8 @@ Write-Host "==> building static Csound for Windows (x64)"
 Write-Host "    using SndFile:    $SndfileLib"
 Write-Host "    using SampleRate: $SamplerateLib"
 
-cmake -S $CsoundSrc -B $CsoundBuild -G "Visual Studio 17 2022" -A x64 `
+cmake -S $CsoundSrc -B $CsoundBuild -G Ninja `
+    -DCMAKE_BUILD_TYPE=Release `
     -DCMAKE_INSTALL_PREFIX="$WinInstall" `
     -DBISON_EXECUTABLE="$BisonExe" `
     -DFLEX_EXECUTABLE="$FlexExe" `
@@ -209,9 +221,9 @@ cmake -S $CsoundSrc -B $CsoundBuild -G "Visual Studio 17 2022" -A x64 `
     -DBUILD_DSSI_OPCODES=OFF `
     -DINSTALL_PYTHON_INTERFACE=OFF
 if ($LASTEXITCODE -ne 0) { throw "Csound configure failed" }
-cmake --build $CsoundBuild --config Release
+cmake --build $CsoundBuild
 if ($LASTEXITCODE -ne 0) { throw "Csound build failed" }
-cmake --install $CsoundBuild --config Release
+cmake --install $CsoundBuild
 if ($LASTEXITCODE -ne 0) { throw "Csound install failed" }
 
 # Bring the static sndfile/samplerate libs+headers into the same install

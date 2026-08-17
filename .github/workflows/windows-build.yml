@@ -19,6 +19,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # First real run on the PD side (identical setup) failed with
+      # "Generator Visual Studio 17 2022 could not find any instance of
+      # Visual Studio" - CMake's own VS-instance auto-detection didn't
+      # find it on the runner, even though VS2022 is installed there. Fix:
+      # set up the MSVC dev environment explicitly (cl.exe/link.exe on
+      # PATH via vcvarsall.bat) and build with Ninja instead, which needs
+      # the compiler on PATH rather than relying on CMake to auto-discover
+      # a VS install.
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
       - name: Install bison/flex (winflexbison)
         run: choco install winflexbison3 -y
 
@@ -27,10 +39,10 @@ jobs:
         run: ./scripts/build_csound_static.ps1
 
       - name: Configure
-        run: cmake -S . -B build/external -G "Visual Studio 17 2022" -A x64
+        run: cmake -S . -B build/external -G Ninja -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
-        run: cmake --build build/external --config Release
+        run: cmake --build build/external
 
       - name: Verify external was produced
         shell: pwsh
