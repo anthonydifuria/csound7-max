@@ -26,7 +26,37 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <pthread.h>
+
+// Windows/MSVC has no pthread.h and no strcasecmp (it's POSIX, normally
+// pulled in via strings.h, which MSVC also lacks) - same issue found and
+// fixed the same way on the PD side (source/csound7_pd/csound7_pd.c) via
+// a real GitHub Actions Windows CI failure there; applied here up front
+// since this file has the exact same pthread_mutex_t usage pattern and
+// would hit the identical failure. Shimmed locally with Win32
+// CRITICAL_SECTION rather than vendoring a pthread-for-Windows library,
+// same reasoning as the PD side.
+#ifdef _WIN32
+  #include <windows.h>   // CRITICAL_SECTION - stand-in for pthread_mutex_t
+  #define strcasecmp _stricmp
+  typedef CRITICAL_SECTION cs7_mutex_t;
+  #define cs7_mutex_init(m)    InitializeCriticalSection(m)
+  #define cs7_mutex_destroy(m) DeleteCriticalSection(m)
+  #define cs7_mutex_lock(m)    EnterCriticalSection(m)
+  #define cs7_mutex_unlock(m)  LeaveCriticalSection(m)
+  // TryEnterCriticalSection returns nonzero on SUCCESS - opposite of
+  // pthread_mutex_trylock, which returns 0 on success. Negate it once
+  // here so every call site below can keep pthread's convention
+  // ("if (!cs7_mutex_trylock(...))" means "if I got the lock").
+  #define cs7_mutex_trylock(m) (!TryEnterCriticalSection(m))
+#else
+  #include <pthread.h>
+  typedef pthread_mutex_t cs7_mutex_t;
+  #define cs7_mutex_init(m)    pthread_mutex_init(m, NULL)
+  #define cs7_mutex_destroy(m) pthread_mutex_destroy(m)
+  #define cs7_mutex_lock(m)    pthread_mutex_lock(m)
+  #define cs7_mutex_unlock(m)  pthread_mutex_unlock(m)
+  #define cs7_mutex_trylock(m) pthread_mutex_trylock(m)
+#endif
 
 #define CS7_MIDI_QUEUE_SIZE 4096
 #define CS7_DEFAULT_KSMPS   1
@@ -82,7 +112,7 @@ typedef struct _csound7
     volatile long midi_head;     // written by the message thread (producer)
     volatile long midi_tail;     // written by the Csound callback (consumer)
 
-    pthread_mutex_t engine_lock; // protects compile/reset vs. perform
+    cs7_mutex_t engine_lock; // protects compile/reset vs. perform
 
     void       *ctl_out;         // control outlet (last one, messages)
     void       *ctl_proxy;       // proxy for the control inlet (last one)
@@ -213,7 +243,7 @@ void *csound7_new(t_symbol *s, long argc, t_atom *argv)
     x->spout_scratch= NULL;
     x->midi_head    = 0;
     x->midi_tail    = 0;
-    pthread_mutex_init(&x->engine_lock, NULL);
+    cs7_mutex_init(&x->engine_lock);
 
     // first argument: path to the .csd/.orc file. second (optional): ksmps.
     if (argc >= 1 && (argv[0].a_type == A_SYM)) {
@@ -313,7 +343,7 @@ void csound7_free(t_csound7 *x)
         x->csound = NULL;
     }
     csound7_rb_free(x);
-    pthread_mutex_destroy(&x->engine_lock);
+    cs7_mutex_destroy(&x->engine_lock);
 }
 
 void csound7_assist(t_csound7 *x, void *b, long m, long a, char *s)
@@ -336,7 +366,7 @@ void csound7_assist(t_csound7 *x, void *b, long m, long a, char *s)
 // ---------------------------------------------------------------------
 static void csound7_start_engine(t_csound7 *x, double sr)
 {
-    pthread_mutex_lock(&x->engine_lock);
+    cs7_mutex_lock(&x->engine_lock);
 
     if (x->csound) {
         csoundDestroy(x->csound);
@@ -348,7 +378,7 @@ static void csound7_start_engine(t_csound7 *x, double sr)
     x->csound = csoundCreate(x, NULL);
     if (!x->csound) {
         object_error((t_object *)x, "csoundCreate failed");
-        pthread_mutex_unlock(&x->engine_lock);
+        cs7_mutex_unlock(&x->engine_lock);
         return;
     }
 
@@ -514,7 +544,7 @@ static void csound7_start_engine(t_csound7 *x, double sr)
 
     csound7_rb_alloc(x, x->ksmps * 4 > 256 ? x->ksmps * 4 : 256);
 
-    pthread_mutex_unlock(&x->engine_lock);
+    cs7_mutex_unlock(&x->engine_lock);
 }
 
 static void csound7_do_reset(t_csound7 *x)
@@ -546,11 +576,11 @@ static void csound7_do_compile(t_csound7 *x, t_symbol *path)
     buf[sz] = 0;
     fclose(f);
 
-    pthread_mutex_lock(&x->engine_lock);
+    cs7_mutex_lock(&x->engine_lock);
     // csoundCompileOrc is documented as safe to call repeatedly during
     // performance (async=0 = synchronous, runs immediately).
     int32_t err = csoundCompileOrc(x->csound, buf, 0);
-    pthread_mutex_unlock(&x->engine_lock);
+    cs7_mutex_unlock(&x->engine_lock);
     free(buf);
 
     if (err != 0)
@@ -588,7 +618,7 @@ void csound7_perform64(t_csound7 *x, t_object *dsp64, double **ins, long numins,
         return;
     }
 
-    if (!pthread_mutex_trylock(&x->engine_lock)) {
+    if (!cs7_mutex_trylock(&x->engine_lock)) {
         // 1) write Max's incoming audio into the input ring buffer
         for (long ch = 0; ch < numins && ch < x->nchnls_in; ch++) {
             for (long i = 0; i < sampleframes; i++) {
@@ -647,7 +677,7 @@ void csound7_perform64(t_csound7 *x, t_object *dsp64, double **ins, long numins,
             x->rb_out_filled -= sampleframes;
         }
 
-        pthread_mutex_unlock(&x->engine_lock);
+        cs7_mutex_unlock(&x->engine_lock);
     } else {
         // engine busy (compile/reset in progress): output silence
         for (long ch = 0; ch < numouts; ch++)
