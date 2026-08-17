@@ -39,7 +39,16 @@ jobs:
           file externals/csound7~.mxo/Contents/MacOS/csound7~
           lipo -info externals/csound7~.mxo/Contents/MacOS/csound7~
 
+      # Bundle the external together with examples/ so the artifact is a
+      # ready-to-use package (not just a bare binary). No help/ here on
+      # purpose - not part of this package for now.
+      - name: Prepare release package
+        run: |
+          mkdir -p release-package
+          cp -r externals/csound7~.mxo release-package/
+          cp -r examples release-package/
+
       - uses: actions/upload-artifact@v4
         with:
           name: csound7-max-macos-universal
-          path: externals/csound7~.mxo
+          path: release-package
