@@ -178,7 +178,27 @@ $SamplerateLib = Find-StaticLib -Dir $SamplerateLibDir -BaseName "samplerate"
 #    intentionally NOT passed here - Csound's own InOut/CMakeLists.txt
 #    only triggers that REQUIRED ALSA search `if(USE_ALSA AND LINUX)`,
 #    which is never true on Windows regardless of this flag.
+#
+#    dirent.h: MSVC doesn't ship this POSIX header at all - confirmed by a
+#    real CI failure on the PD side (identical Csound build here): Csound's
+#    own CMakeLists.txt does find_file(DIRENT_H "dirent.h") around line
+#    770 and, on MSVC, hard FATAL_ERRORs the whole configure step if it's
+#    not found ("Csound will not be able to load dynamic plugins"; this is
+#    a build-time need, not just a runtime one - BUILD_PLUGINS=OFF above
+#    doesn't help, it only skips building Csound's own bundled plugin
+#    targets). Fixed by fetching the well-known tronkko/dirent
+#    single-header MSVC shim (MIT licensed, the standard fix for exactly
+#    this) and pointing CMAKE_INCLUDE_PATH at it, which is one of the
+#    locations find_file() searches by default.
 # ---------------------------------------------------------------------
+$DirentDir = Join-Path $BuildRoot "win-compat\include"
+$DirentHeader = Join-Path $DirentDir "dirent.h"
+if (-not (Test-Path $DirentHeader)) {
+    New-Item -ItemType Directory -Force -Path $DirentDir | Out-Null
+    Write-Host "==> fetching dirent.h shim (tronkko/dirent, MIT) for MSVC"
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/tronkko/dirent/master/include/dirent.h" -OutFile $DirentHeader
+}
+
 $CsoundSrc = Join-Path $BuildRoot "csound-static\src"
 Clone-Once -Repo $CsoundRepo -Branch $CsoundBranch -Dest $CsoundSrc
 $CsoundBuild = Join-Path $BuildRoot "csound-static\build-windows"
@@ -186,10 +206,12 @@ $CsoundBuild = Join-Path $BuildRoot "csound-static\build-windows"
 Write-Host "==> building static Csound for Windows (x64)"
 Write-Host "    using SndFile:    $SndfileLib"
 Write-Host "    using SampleRate: $SamplerateLib"
+Write-Host "    using dirent.h:   $DirentHeader"
 
 cmake -S $CsoundSrc -B $CsoundBuild -G Ninja `
     -DCMAKE_BUILD_TYPE=Release `
     -DCMAKE_INSTALL_PREFIX="$WinInstall" `
+    -DCMAKE_INCLUDE_PATH="$DirentDir" `
     -DBISON_EXECUTABLE="$BisonExe" `
     -DFLEX_EXECUTABLE="$FlexExe" `
     -DSndFile_LIBRARY="$SndfileLib" `
