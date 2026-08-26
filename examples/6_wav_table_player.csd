@@ -10,7 +10,6 @@ nchnls_i = 2
 ksmps    = 32
 
 ; Example 6: pick a WAV/AIFF/MP3 file from disk in Max and load it
-
 gitab1 ftgen 1, 0, 1, -2, 0
 
 
