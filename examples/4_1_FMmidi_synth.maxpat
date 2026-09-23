@@ -170,8 +170,8 @@
 					"numinlets" : 3,
 					"numoutlets" : 3,
 					"outlettype" : [ "signal", "signal", "" ],
-					"patching_rect" : [ 37.0, 344.0, 212.0, 22.0 ],
-					"text" : "csound7~ 4_midi_synth.csd 32"
+					"patching_rect" : [ 37.0, 344.0, 211.0, 22.0 ],
+					"text" : "csound7~ 4_1_FM_midi_synth.csd 32"
 				}
 
 			}
