@@ -14,7 +14,7 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
       # First real run on the PD side (identical setup) failed with
       # "Generator Visual Studio 17 2022 could not find any instance of
@@ -24,7 +24,7 @@ jobs:
       # PATH via vcvarsall.bat) and build with Ninja instead, which needs
       # the compiler on PATH rather than relying on CMake to auto-discover
       # a VS install.
-      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: ilammy/msvc-dev-cmd@v1.13.0
         with:
           arch: x64
 
