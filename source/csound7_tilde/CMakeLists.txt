@@ -32,7 +32,10 @@ elseif(WIN32)
   # prefix on Windows (CMake's own MSVC default does NOT add one, unlike
   # its Unix default) - find_library() tries both spellings so this
   # doesn't depend on guessing the one true answer up front.
-  find_library(CSOUND_STATIC_LIB_WIN NAMES libcsound64 csound64
+  #OLD find_library(CSOUND_STATIC_LIB_WIN NAMES libcsound64 csound64
+  #  PATHS "${CSOUND_STATIC_ROOT}/lib" NO_DEFAULT_PATH)
+  
+  find_library(CSOUND_STATIC_LIB_WIN NAMES libcsound7_64 csound7_64 libcsound64 csound64
     PATHS "${CSOUND_STATIC_ROOT}/lib" NO_DEFAULT_PATH)
   find_library(SNDFILE_STATIC_LIB_WIN NAMES libsndfile sndfile
     PATHS "${CSOUND_STATIC_ROOT}/lib" NO_DEFAULT_PATH)
